@@ -100,7 +100,7 @@ class client extends JFrame implements ActionListener {
 			if (e.getSource() == select)
 				System.out.println("selected ip");
 			else if (e.getSource() == cancel) {
-				setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				dispose();
 			}
 
 		}
