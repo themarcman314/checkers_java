@@ -115,7 +115,7 @@ class Client extends JFrame implements ActionListener {
 			FIRST
 		}
 
-		clickState cState = clickState.NONE;
+		private clickState cState = clickState.NONE;
 
 		public BoardPanel() {
 			addMouseListener(this);
@@ -176,11 +176,28 @@ class Client extends JFrame implements ActionListener {
 							originY + 1 + delta * yIndex,
 							delta - 1, delta - 1);
 
-					if (boardArrayIdx == squareClicked && !isSquareEmpty(squareClicked, b)) {
-						g.setColor(Color.green);
-						g.fillRect(originX + 1 + delta * xIndex,
-								originY + 1 + delta * yIndex,
-								delta - 1, delta - 1);
+					if (boardArrayIdx == squareClicked
+							&& !isSquareEmpty(squareClicked, b)) {
+						switch (cState) {
+							case clickState.NONE:
+								cState = clickState.FIRST;
+								g.setColor(Color.GRAY);
+								g.drawString("click state is NONE", 50, 50);
+								g.setColor(Color.green);
+								g.fillRect(originX + 1 + delta * xIndex,
+										originY + 1 + delta * yIndex,
+										delta - 1, delta - 1);
+								break;
+
+							case clickState.FIRST:
+								g.setColor(Color.GRAY);
+								g.drawString("click state is FIRST", 50, 50);
+								cState = clickState.NONE;
+
+								break;
+							default:
+								break;
+						}
 					}
 					if (b.board[boardArrayIdx] == b.BLACK_PAWN
 							|| b.board[xIndex] == b.BLACK_KING)
