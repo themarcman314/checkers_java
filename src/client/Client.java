@@ -134,7 +134,8 @@ class Client extends JFrame implements ActionListener {
 		}
 
 		public boolean isSquareEmpty(int square_x, int square_y, Board b) {
-			return isSquareEmpty(square_y / b.sideSize + square_x, b);
+			int index = b.getIndex(square_x, square_y);
+			return isSquareEmpty(index, b);
 		}
 
 		public Dimension getPreferredSize() {
