@@ -36,14 +36,20 @@ public class Board {
 	}
 
 	public int getX(int board_index) {
-		return board_index % Board.this.sideSize;
+		return board_index % sideSize;
 	}
 
 	public int getY(int board_index) {
-		return board_index / Board.this.sideSize;
+		return board_index / sideSize;
 	}
 
 	public int getIndex(int x, int y) {
-		return x + y * Board.this.sideSize;
+		return x + y * sideSize;
+	}
+
+	public boolean isInBoard(int x, int y) {
+		if (x < 0 || y < 0 || x >= sideSize || y >= sideSize)
+			return false;
+		return true;
 	}
 }

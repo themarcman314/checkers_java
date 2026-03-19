@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 
@@ -121,18 +122,22 @@ class Client extends JFrame implements ActionListener {
 		private clickState cState = clickState.NONE;
 
 		public BoardPanel() {
+			Arrays.fill(possibleMovesX, -1);
+			Arrays.fill(possibleMovesY, -1);
 			addMouseListener(this);
 			SoundEffect s = new SoundEffect("effects/board_setup.wav");
 			s.play();
 			b = new Board();
 		}
 
+		// TODO: move to board class instead
 		public boolean isSquareEmpty(int square_num, Board b) {
 			if (b.board[square_num] == 0)
 				return true;
 			return false;
 		}
 
+		// TODO: move to board class instead
 		public boolean isSquareEmpty(int square_x, int square_y, Board b) {
 			int index = b.getIndex(square_x, square_y);
 			return isSquareEmpty(index, b);
@@ -156,7 +161,13 @@ class Client extends JFrame implements ActionListener {
 				for (int xIndex = 0; xIndex < b.sideSize; xIndex++) {
 					int boardArrayIdx = b.getIndex(xIndex, yIndex);
 					drawGridSquareColors(g, xIndex, yIndex, Color.GRAY, Color.WHITE);
-					highlightSquare(g, possibleMovesX[0], possibleMovesY[0]);
+
+					if (cState == clickState.FIRST) {
+						highlightSquare(g, possibleMovesX[0], possibleMovesY[0]);
+						highlightSquare(g, possibleMovesX[1], possibleMovesY[1]);
+						highlightSquare(g, possibleMovesX[2], possibleMovesY[2]);
+						highlightSquare(g, possibleMovesX[3], possibleMovesY[3]);
+					}
 					drawPieces(g, boardArrayIdx, xIndex, yIndex);
 				}
 			}
@@ -210,6 +221,8 @@ class Client extends JFrame implements ActionListener {
 		}
 
 		private void highlightSquare(Graphics g, int xIndex, int yIndex) {
+			if (!b.isInBoard(xIndex, yIndex))
+				return;
 			g.setColor(Color.green);
 			g.fillRect(originX + 1 + delta * xIndex,
 					originY + 1 + delta * yIndex,
@@ -233,26 +246,36 @@ class Client extends JFrame implements ActionListener {
 				int squareClickedY = ((p.y - originY) / delta);
 				squareClicked = squareClickedY * b.sideSize + squareClickedX;
 				System.out.printf("x clicked: %d\ny clicked: %d\n", squareClickedX, squareClickedY);
+
+				Arrays.fill(possibleMovesX, -1);
+				Arrays.fill(possibleMovesY, -1);
 				switch (cState) {
 					case NONE:
 						cState = clickState.FIRST;
 						if (!isSquareEmpty(squareClicked, b)) {
-							if (squareClickedX > 0 || squareClickedY > 0) {
-								if (isSquareEmpty(squareClickedX - 1,
-										squareClickedY - 1, b)) {
-									System.out.println("square is empty");
-									possibleMovesX[0] = squareClickedX - 1;
-									possibleMovesY[0] = squareClickedY - 1;
-								}
-							} else if (squareClickedY > 0) {
-								if (isSquareEmpty(squareClickedX + 1,
-										squareClickedY - 1, b)) {
-									System.out.println("square is empty");
-									possibleMovesX[1] = squareClickedX + 1;
-									possibleMovesY[1] = squareClickedY - 1;
-
-								}
-
+							if (isSquareEmpty(squareClickedX - 1,
+									squareClickedY - 1, b)) {
+								System.out.println("square is empty");
+								possibleMovesX[0] = squareClickedX - 1;
+								possibleMovesY[0] = squareClickedY - 1;
+							}
+							if (isSquareEmpty(squareClickedX + 1,
+									squareClickedY - 1, b)) {
+								System.out.println("square is empty");
+								possibleMovesX[1] = squareClickedX + 1;
+								possibleMovesY[1] = squareClickedY - 1;
+							}
+							if (isSquareEmpty(squareClickedX - 1,
+									squareClickedY + 1, b)) {
+								System.out.println("square is empty");
+								possibleMovesX[2] = squareClickedX - 1;
+								possibleMovesY[2] = squareClickedY + 1;
+							}
+							if (isSquareEmpty(squareClickedX + 1,
+									squareClickedY + 1, b)) {
+								System.out.println("square is empty");
+								possibleMovesX[3] = squareClickedX + 1;
+								possibleMovesY[3] = squareClickedY + 1;
 							}
 						}
 						break;
