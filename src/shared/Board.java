@@ -34,4 +34,16 @@ public class Board {
 			System.out.printf("\n");
 		}
 	}
+
+	public int getX(int board_index) {
+		return board_index % Board.this.sideSize;
+	}
+
+	public int getY(int board_index) {
+		return board_index / Board.this.sideSize;
+	}
+
+	public int getIndex(int x, int y) {
+		return x + y * Board.this.sideSize;
+	}
 }

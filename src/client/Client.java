@@ -109,6 +109,9 @@ class Client extends JFrame implements ActionListener {
 	class BoardPanel extends JPanel implements MouseListener {
 		private final int boardPanelSizePixels = 600;
 		private Board b;
+		private int[] possibleMovesX = new int[4];
+		private int[] possibleMovesY = new int[4];
+		private final int circleDiameter = 2 * delta / 3;
 
 		enum clickState {
 			NONE,
@@ -130,91 +133,86 @@ class Client extends JFrame implements ActionListener {
 			return false;
 		}
 
+		public boolean isSquareEmpty(int square_x, int square_y, Board b) {
+			return isSquareEmpty(square_y / b.sideSize + square_x, b);
+		}
+
 		public Dimension getPreferredSize() {
 			return new Dimension(boardPanelSizePixels, boardPanelSizePixels);
 		}
 
 		public void paintComponent(Graphics g) {
+			// clear stuff and prepare for component drawing
 			super.paintComponent(g);
-			g.setColor(Color.gray);
 			// center board
 			Dimension d = this.getSize();
 			originX = (d.width - (b.sideSize * delta)) / 2;
 			originY = (d.height - (b.sideSize * delta)) / 2;
 
-			// System.out.printf("origin x: %d\norigin y: %d\n", originX, originY);
+			drawGrid(g, Color.GRAY);
+			// draw pieces and board squares
+			for (int yIndex = 0; yIndex < b.sideSize; yIndex++) {
+				for (int xIndex = 0; xIndex < b.sideSize; xIndex++) {
+					int boardArrayIdx = b.getIndex(xIndex, yIndex);
+					drawGridSquareColors(g, xIndex, yIndex, Color.GRAY, Color.WHITE);
+					highlightSquare(g, possibleMovesX[0], possibleMovesY[0]);
+					drawPieces(g, boardArrayIdx, xIndex, yIndex);
+				}
+			}
+		}
 
-			// draw grid
+		private void drawGrid(Graphics g, Color gridcolor) {
+			g.setColor(gridcolor);
 			for (int line = 0; line <= b.sideSize; line++) {
 				g.drawLine(originX, originY + line * delta, originX + b.sideSize * delta,
 						originY + line * delta);
 				g.drawLine(originX + line * delta, originY, originX + line * delta,
 						originY + b.sideSize * delta);
 			}
-			final int circleDiameter = 2 * delta / 3;
+		}
 
-			// draw pieces and board squares
-			for (int yIndex = 0; yIndex < b.sideSize; yIndex++) {
-				for (int xIndex = 0; xIndex < b.sideSize; xIndex++) {
-					int boardArrayIdx = xIndex + yIndex * b.sideSize;
-					if (yIndex % 2 == 0) {
-						if (xIndex % 2 == 0)
-							g.setColor(Color.WHITE);
-						else {
-							g.setColor(Color.GRAY);
-						}
+		private void drawPieces(Graphics g, int boardArrayIdx, int xIndex, int yIndex) {
+			if (b.board[boardArrayIdx] == b.BLACK_PAWN
+					|| b.board[xIndex] == b.BLACK_KING)
+				g.setColor(Color.BLACK);
+			else if (b.board[boardArrayIdx] == b.RED_PAWN
+					|| b.board[xIndex] == b.RED_KING)
+				g.setColor(Color.RED);
+			else
+				return;
+			g.fillOval((originX - circleDiameter / 2 + delta / 2)
+					+ delta * xIndex,
+					(originY - circleDiameter / 2 + delta / 2)
+							+ delta * yIndex,
+					circleDiameter,
+					circleDiameter);
+		}
 
-					} else {
-						if (xIndex % 2 == 1)
-							g.setColor(Color.WHITE);
-						else {
-							g.setColor(Color.GRAY);
-						}
-					}
+		private void drawGridSquareColors(Graphics g, int xIndex, int yIndex, Color dark, Color light) {
+			if (yIndex % 2 == 0) {
+				if (xIndex % 2 == 0)
+					g.setColor(light);
+				else {
+					g.setColor(dark);
+				}
 
-					g.fillRect(originX + 1 + delta * xIndex,
-							originY + 1 + delta * yIndex,
-							delta - 1, delta - 1);
-
-					if (boardArrayIdx == squareClicked
-							&& !isSquareEmpty(squareClicked, b)) {
-						switch (cState) {
-							case clickState.NONE:
-								cState = clickState.FIRST;
-								g.setColor(Color.GRAY);
-								g.drawString("click state is NONE", 50, 50);
-								g.setColor(Color.green);
-								g.fillRect(originX + 1 + delta * xIndex,
-										originY + 1 + delta * yIndex,
-										delta - 1, delta - 1);
-								break;
-
-							case clickState.FIRST:
-								g.setColor(Color.GRAY);
-								g.drawString("click state is FIRST", 50, 50);
-								cState = clickState.NONE;
-
-								break;
-							default:
-								break;
-						}
-					}
-					if (b.board[boardArrayIdx] == b.BLACK_PAWN
-							|| b.board[xIndex] == b.BLACK_KING)
-						g.setColor(Color.BLACK);
-					else if (b.board[boardArrayIdx] == b.RED_PAWN
-							|| b.board[xIndex] == b.RED_KING)
-						g.setColor(Color.RED);
-					else
-						continue;
-					g.fillOval((originX - circleDiameter / 2 + delta / 2)
-							+ delta * xIndex,
-							(originY - circleDiameter / 2 + delta / 2)
-									+ delta * yIndex,
-							circleDiameter,
-							circleDiameter);
+			} else {
+				if (xIndex % 2 == 1)
+					g.setColor(light);
+				else {
+					g.setColor(dark);
 				}
 			}
+			g.fillRect(originX + 1 + delta * xIndex,
+					originY + 1 + delta * yIndex,
+					delta - 1, delta - 1);
+		}
+
+		private void highlightSquare(Graphics g, int xIndex, int yIndex) {
+			g.setColor(Color.green);
+			g.fillRect(originX + 1 + delta * xIndex,
+					originY + 1 + delta * yIndex,
+					delta - 1, delta - 1);
 		}
 
 		@Override
@@ -230,8 +228,41 @@ class Client extends JFrame implements ActionListener {
 			if (p.y < b.sideSize * delta + originY && p.y > originY
 					&& p.x < b.sideSize * delta + originX
 					&& p.x > originX) { // make sure click is within bounds
-				squareClicked = ((p.y - originY) / delta) * b.sideSize
-						+ (p.x - originX) / delta;
+				int squareClickedX = (p.x - originX) / delta;
+				int squareClickedY = ((p.y - originY) / delta);
+				squareClicked = squareClickedY * b.sideSize + squareClickedX;
+				System.out.printf("x clicked: %d\ny clicked: %d\n", squareClickedX, squareClickedY);
+				switch (cState) {
+					case NONE:
+						cState = clickState.FIRST;
+						if (!isSquareEmpty(squareClicked, b)) {
+							if (squareClickedX > 0 || squareClickedY > 0) {
+								if (isSquareEmpty(squareClickedX - 1,
+										squareClickedY - 1, b)) {
+									System.out.println("square is empty");
+									possibleMovesX[0] = squareClickedX - 1;
+									possibleMovesY[0] = squareClickedY - 1;
+								}
+							} else if (squareClickedY > 0) {
+								if (isSquareEmpty(squareClickedX + 1,
+										squareClickedY - 1, b)) {
+									System.out.println("square is empty");
+									possibleMovesX[1] = squareClickedX + 1;
+									possibleMovesY[1] = squareClickedY - 1;
+
+								}
+
+							}
+						}
+						break;
+					case FIRST:
+						cState = clickState.NONE;
+						break;
+
+					default:
+						break;
+
+				}
 				repaint();
 			}
 		}
